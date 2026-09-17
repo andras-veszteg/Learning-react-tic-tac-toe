@@ -3,8 +3,14 @@ import { useState } from "react";
 import Player from "./components/Player.jsx";
 import GameBoard from "./components/GameBoard.jsx";
 import Log from "./components/Log.jsx";
-import { WINNING_COMBINATIONS } from "./winning-combinations.js";   
+import { WINNING_COMBINATIONS } from "./winning-combinations.js";
+import GameOver from "./components/GameOver.jsx";
 
+const initialGameBoard = [
+    [null, null, null],
+    [null, null, null],
+    [null, null, null],
+];
 
 function deriveActivePlayer(gameTurns){
     let currentPlayer ='X'
@@ -14,9 +20,28 @@ function deriveActivePlayer(gameTurns){
 
 function App() {
     const [gameTurns, setGameTurns] = useState([]);
+    // const [hasWinner, setHasWinner] = useState(false);
     //const [activeplayer, setActivePlayer] = useState('X')
 
-    let activeplayer =deriveActivePlayer(gameTurns);
+    let activeplayer = deriveActivePlayer(gameTurns);
+
+    let gameBoard = initialGameBoard;
+
+    for(const turn of gameTurns){
+        gameBoard[turn.square.row][turn.square.col] = turn.player;
+    }
+    
+    let winner = null;
+    for(const combination of WINNING_COMBINATIONS){
+        const firstSquareSymbol = gameBoard[combination[0].row][combination[0].column];
+        const secondSquareSymbol = gameBoard[combination[1].row][combination[1].column];
+        const thirdSquareSymbol = gameBoard[combination[1].row][combination[2].column];
+        
+        if(firstSquareSymbol && firstSquareSymbol === secondSquareSymbol && secondSquareSymbol === thirdSquareSymbol)
+            winner = firstSquareSymbol;
+    }
+    
+    const hasDraw = gameTurns.length === 9 && !winner;
     
     function  handleSelectSquare(rowIndex, colIndex,){
         //setActivePlayer((currentActivePlayer) => currentActivePlayer === 'X' ? 'O' : 'X')
@@ -35,13 +60,12 @@ function App() {
           <Player initialName="Player 1" symbol="X" isActive={activeplayer === 'X'} />
           <Player initialName="Player 2" symbol="O" isActive={activeplayer === 'O'} />
         </ol>
+          {(winner || hasDraw) && <GameOver winner={winner} />}
         <GameBoard 
             onSelectSquare={handleSelectSquare} 
-            turns={gameTurns} />
+            board={gameBoard} />
       </div>
       <Log turns={gameTurns} />
     </main>
   );
 }
-
-export default App
